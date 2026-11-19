@@ -1,364 +1,197 @@
-import openpyxl
-import math
+from openpyxl import load_workbook
 
 path = r"C:\Users\satya\Desktop\datasheet\12600637.xlsx"
-wb = openpyxl.load_workbook(path, data_only=True)
 
-print(wb.sheetnames)
-
+wb = load_workbook(path, data_only=True)
 ws = wb["Daily Log"]
 
-def get_values(data,start, end, col):
-    
 
-    for row in ws[f"{col}{start}:{col}{end}"]:
-        for cell in row:
+def get_values(start, end, col):
+    data = []
+    # as ending row is exclusive to have to add + 1
+    for row in range(start, end + 1):
+        value = ws[f"{col}{row}"].value
+         
+        if value is not None:
+            data.append(value)
 
-            if cell.value is None:
-                continue
+    return data
 
-            if cell.value == 0:
-                continue
 
-            data.append(cell.value)
+def average(data):
+    if len(data) == 0:
+        return 0
 
-   
-
-#SRI
-def calculate_avg_sleep():
-    sleep_data = []
-    get_values(sleep_data, 7, 53, "B")
-    sri = sum(sleep_data) / len(sleep_data)
-    print(f"my SRI : {sri:.2f} minutes")
-    return sri
-
-
-# other activity 
-def other_activity():
-    other_data = []
-    get_values(other_data, 7, 53, "H")
-    otherA = sum(other_data) / len(other_data)
-    print(f"other datas : {otherA:.2f} minutes")
-
-other_activity()
-
-
-
-# free time 
-def free_time():
-    free_time = []
-    get_values(free_time, 7, 53, "J")   
-    freeT = sum(free_time) / len(free_time)
-    print(f"avg free times : {freeT:.2f} minutes")
-
-free_time()
-
-
-
-
-#tpi - total productivity index
-def total_productivity():
-
-    coding_data = []
-
-    get_values(coding_data, 7, 53, "E")
-
-    tpi = sum(coding_data) / len(coding_data)
-
-    print(f"my TPI : {tpi:.2f} minutes")
-
-    return tpi
-
-
-#AAI - academic activity index
-def academic_activity():
-
-    study_data = []
-    class_data = []
-
-    get_values(study_data, 7, 53, "D")
-    print("study_time : " , sum(study_data) / len(study_data) )
-
-    get_values(class_data, 7, 53, "F")
-    print("class data  : " , sum(class_data) / len(class_data) )
-    
-
-    academic_data = []
-
-    for i in range(len(study_data)):
-        academic_data.append(study_data[i])
-
-    for i in range(len(class_data)):
-        academic_data.append(class_data[i])
-
-    aai = sum(academic_data) / len(academic_data)
-
-    print(f"my AAI : {aai:.2f} minutes")
-
-    return aai
-
-
-#PhAI -Physical Activity Index
-
-def physical_activity():
-
-    fitness_data = []
-    get_values(fitness_data, 7, 53, "C")
-    phai = sum(fitness_data) / len(fitness_data)
-    print(f"PhAI : {phai:.2f} minutes")
-
-    return phai
-
-
-
-# ABI -Activity balance Index
-
-
-def activity_balance():
-
-    total_time_data = []
-    get_values(total_time_data, 7, 53, "I")
-    free_time_data = []
-
-    for value in total_time_data:
-        free_time_data.append(1440 - value)
-
-    abi = sum(free_time_data) / len(free_time_data)
-
-    print(f"ABI : {abi:.2f} minutes")
-
-    return abi
-
-
-# TUI -Time utilization Index
-def time_utilization():
-
-    total_time_data = []
-    get_values(total_time_data, 7, 53, "I")
-    tui = sum(total_time_data) / len(total_time_data)
-
-    print(f"TUI : {tui:.2f} minutes")
-
-    return tui
-
-
-# DCI - Data Continuity Index
-def data_continuity():
-
-    sleep_data = []
-
-    get_values(sleep_data, 9, 52, "B")
-
-    expected_days = 44
-
-    dci = (len(sleep_data) / expected_days) * 100
-
-    print(f"DCI : {dci:.2f} %")
-
-    return dci
-
-
-# EI - Experience Index
-def experience_index():
-
-    feeling = {
-        "excellent": 5,
-        "very good": 5,
-        "good": 4,
-        "normal": 3,
-        "neutral": 3,
-        "low": 2,
-        "bad": 1,
-        # "stressed" : 1 ,
-    }
-
-    satisfaction_rate = {
-        "very satisfied": 5,
-        "satisfied": 4,
-        "satishfied": 4,
-        "normal": 3,
-        "neutral": 3,
-        "unsatisfied": 2,
-        "very unsatisfied": 1,
-        
-    }
-
-    energy = {
-        "high": 3,
-        "medium": 2,
-        "low": 1
-    }
-
-    experience_data = []
-
-    for r in range(7, 53):
-
-        if ws[f"B{r}"].value is None:
-            continue
-
-        #extracting the cell value
-        feeling_value = ws[f"K{r}"].value
-        satisfaction_value = ws[f"L{r}"].value
-        energy_value = ws[f"M{r}"].value
-
-        if feeling_value is None or satisfaction_value is None:
-            continue #invalid
-        
-        #getting the scores based on the values
-        feeling_score = feeling[feeling_value.strip().lower()]
-        satisfaction_score = satisfaction_rate[
-            satisfaction_value.strip().lower()
-        ]
-
-        #no energy value case 
-        if energy_value is None:
-            score = (feeling_score + satisfaction_score) / 2
-        else:
-            energy_score = energy[
-                energy_value.strip().lower()
-            ]
-            score = (feeling_score + satisfaction_score + energy_score) / 3
-
-        experience_data.append(score)
-
-    ei = sum(experience_data) / len(experience_data)
-
-    print(f"EI : {ei:.2f} / 5")
-
-    return ei
-
-
-
-sri = calculate_avg_sleep()
-tpi = total_productivity()
-aai = academic_activity()
-phai = physical_activity()
-abi = activity_balance()
-tui = time_utilization()
-dci = data_continuity()
-ei = experience_index()
-
-
-#calculating personal activity index
-pai = (0.15 * tpi) + (0.20 * aai) + (0.15 * phai) + (0.20 * sri) + (0.15 * tui) + (0.10 * ei) + (0.05 * dci)
-print(f"personal activity index  : {pai:.2f}")
-
+    return sum(data) / len(data)
 
 
 def correlation(x, y):
+    if len(x) < 2 or len(x) != len(y):
+        return 0
 
-    n = len(x)
-
-    avg_of_x = sum(x) / n
-    avg_of_y = sum(y) / n
+    avg_x = average(x)
+    avg_y = average(y)
 
     numerator = 0
-    x_difference = 0
-    y_difference = 0
+    sum_x = 0
+    sum_y = 0
 
-    for i in range(n):
+    for i in range(len(x)):
+        numerator += (x[i] - avg_x) * (y[i] - avg_y)
+        sum_x += (x[i] - avg_x) ** 2
+        sum_y += (y[i] - avg_y) ** 2
 
-        numerator += ((x[i] - avg_of_x) * (y[i] - avg_of_y))
-
-        x_difference +=  (x[i] - avg_of_x) ** 2
-        y_difference += (y[i] - avg_of_y) ** 2
-
-    denominator = (x_difference * y_difference) ** 0.5
+    denominator = (sum_x * sum_y) ** 0.5
 
     if denominator == 0:
         return 0
 
     return numerator / denominator
 
+#on excel sheet  13th row -> 17 aug
+#48th row -> 21 sept
+start_row = 13
+end_row = 48
 
-def relationship_analysis():
+sleep_data = get_values(start_row, end_row, "B")
+coding_data = get_values(start_row, end_row, "E")
+study_data = get_values(start_row, end_row, "D")
+print("avg study :" , round(sum(study_data) / len(study_data),2))
+class_data = get_values(start_row, end_row, "F")
+print("avg class :" , round(sum(class_data) / len(class_data),2))
+fitness_data = get_values(start_row, end_row, "C")
+other_data = get_values(start_row, end_row, "H")
+total_data = get_values(start_row, end_row, "I")
+free_data = get_values(start_row, end_row, "J")
 
-    coding_data = []
-    coding_energy = []
+SRI = average(sleep_data)
+TPI = average(coding_data)
+PhAI = average(fitness_data)
+otherA = average(other_data)
+freeA = average(free_data)
+TUI = average(total_data)
 
-    sleep_data = []
-    sleep_energy = []
+ABI_data = []
 
-    study_data = []
-    study_satisfaction = []
+for value in total_data:
+    #in a day total mins is 24 * 60  =  1440 mins
+    ABI_data.append(1440 - value)
 
-    energy = {
-        "high": 3,
-        "medium": 2,
-        "low": 1
-    }
+ABI = average(ABI_data)
 
-    satisfaction = {
-        "very satisfied": 5,
-        "satisfied": 4,
-        "satishfied": 4,
-        "normal": 3,
-        "neutral": 3,
-        "unsatisfied": 2,
-        "very unsatisfied": 1
-    }
+study_class = []
 
+for row in range(start_row, end_row + 1):
+    study = ws[f"D{row}"].value
+    classes = ws[f"F{row}"].value
 
-    for r in range(7, 54):
+    if study is not None and classes is not None:
+        study_class.append(study + classes)
 
-        coding = ws[f"E{r}"].value
-        sleep = ws[f"B{r}"].value
-        study = ws[f"D{r}"].value
+AAI = average(study_class)
 
-        energy_value = ws[f"M{r}"].value
-        satisfaction_value = ws[f"L{r}"].value
+feeling = {
+    "excellent": 5,
+    "very good": 5,
+    "good": 4,
+    "normal": 3,
+    "neutral": 3,
+    "low": 2,
+    "bad": 1
+}
 
+satisfaction = {
+    "very satisfied": 5,
+    "satisfied": 4,
+    "satishfied": 4,
+    "normal": 3,
+    "neutral": 3,
+    "unsatisfied": 2,
+    "very unsatisfied": 1
+}
 
-        # Coding -> Energy
-        if coding is not None and energy_value is not None:
+energy = {
+    "high": 3,
+    "medium": 2,
+    "low": 1
+}
 
-            energy_score = energy[
-                energy_value.strip().lower()
-            ]
+experience_data = []
 
-            coding_data.append(coding)
-            coding_energy.append(energy_score)
+for row in range(start_row, end_row + 1):
+    feel = ws[f"K{row}"].value #my feelings
+    satisfy = ws[f"L{row}"].value 
 
+    scores = []
 
-        # Sleep -> Energy
-        if sleep is not None and energy_value is not None:
+    if feel is not None and feel.lower().strip() in feeling:
+        scores.append(feeling[feel.lower().strip()])
 
-            energy_score = energy[
-                energy_value.strip().lower()
-            ]
+    if satisfy is not None and satisfy.lower().strip() in satisfaction:
+        scores.append(satisfaction[satisfy.lower().strip()])
 
-            sleep_data.append(sleep)
-            sleep_energy.append(energy_score)
+    if len(scores) > 0:
+        experience_data.append(average(scores))
 
+EI = average(experience_data)
 
-        # Study -> Satisfaction
-        if study is not None and satisfaction_value is not None:
+dci_data = get_values(9, 52, "B")
+expected_days = 44 # from 13 aug to 25 sept as mentioned in the pdf 
+DCI = (len(dci_data) / expected_days) * 100
+PAI = ((0.15 * TPI) + (0.20 * AAI) + (0.15 * PhAI) + (0.20 * SRI) + (0.15 * TUI) + (0.10 * EI) + (0.05 * DCI))
 
-            satisfaction_score = satisfaction[
-                satisfaction_value.strip().lower()
-            ]
-
-            study_data.append(study)
-            study_satisfaction.append(satisfaction_score)
-
-
-    print()
-    print("--RELATIONSHIP ANALYSIS ----------")
-
-    coding_corr = correlation(coding_data, coding_energy)
-    sleep_corr = correlation(sleep_data, sleep_energy)
-    study_corr = correlation(study_data, study_satisfaction)
-
-    print(f"Coding <-> Energy        : {coding_corr:.2f}")
-    print(f"Sleep <-> Energy         : {sleep_corr:.2f}")
-    print(f"Study <-> Satisfaction   : {study_corr:.2f}")
-
-
-
-
-relationship_analysis() 
-
+print("Sleep Recovery Index (SRI):", round(SRI, 2), "minutes")
+print("Technical Productivity Index (TPI):", round(TPI, 2), "minutes")
+print("Academic Activity Index (AAI):", round(AAI, 2), "minutes")
+print("Physical Activity Index (PhAI):", round(PhAI, 2), "minutes")
+print("Average Other Activity:", round(otherA, 2), "minutes")
+print("Average Free Time:", round(freeA, 2), "minutes")
+print("Accounted Busy Index (ABI):", round(ABI, 2), "minutes")
+print("Total Utilization Index (TUI):", round(TUI, 2), "minutes")
+print("Experience Index (EI):", round(EI, 2), "/ 5")
+print("Data Continuity Index (DCI):", round(DCI, 2), "%")
+print("Personal Activity Index (PAI):", round(PAI, 2))
 
 
+coding_energy_x = []
+coding_energy_y = []
 
-    
+sleep_energy_x = []
+sleep_energy_y = []
+
+study_satisfaction_x = []
+study_satisfaction_y = []
+
+for row in range(start_row, end_row + 1):
+    coding = ws[f"E{row}"].value  #coding time
+    sleep = ws[f"B{row}"].value # sleeping time
+    study = ws[f"D{row}"].value # how much i have studied
+    energy_value = ws[f"M{row}"].value # energy levels
+    satisfy = ws[f"L{row}"].value # satishfaction level
+
+    if coding is not None and energy_value is not None:
+        key = energy_value.lower().strip()
+
+        if key in energy:
+            coding_energy_x.append(coding)
+            coding_energy_y.append(energy[key])
+
+    if sleep is not None and energy_value is not None:
+        key = energy_value.lower().strip()
+
+        if key in energy:
+            sleep_energy_x.append(sleep)
+            sleep_energy_y.append(energy[key])
+
+    if study is not None and satisfy is not None:
+        key = satisfy.lower().strip()
+
+        if key in satisfaction:
+            study_satisfaction_x.append(study)
+            study_satisfaction_y.append(satisfaction[key])
+
+
+print("----- Relationship  ANALYSIS -----")
+print("Coding <-> Energy:", round(correlation(coding_energy_x, coding_energy_y), 2))
+print("Sleep <-> Energy:", round(correlation(sleep_energy_x, sleep_energy_y), 2))
+print("Study <-> Satisfaction:", round(correlation(study_satisfaction_x, study_satisfaction_y), 2))
